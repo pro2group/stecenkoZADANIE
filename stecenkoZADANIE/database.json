@@ -1,0 +1,38 @@
+{
+  "income": [],
+  "expenses": [],
+  "bookings": [],
+  "clients": [],
+  "rooms": [
+    {
+      "id": "ROOM904132dj8",
+      "type": "superior",
+      "status": "occupied",
+      "capacity": 1,
+      "price": 120000,
+      "description": ""
+    }
+  ],
+  "services": [
+    {
+      "id": "SVC2105365sk",
+      "name": "123",
+      "description": "123",
+      "category": "food",
+      "price": 123,
+      "unit": "за услугу"
+    }
+  ],
+  "staff": [
+    {
+      "id": "EMP001",
+      "fullname": "Администратор",
+      "position": "Главный администратор",
+      "role": "admin",
+      "email": "admin@hotel.com",
+      "phone": "+7 (999) 999-99-99",
+      "login": "admin",
+      "password": "123456"
+    }
+  ]
+}
