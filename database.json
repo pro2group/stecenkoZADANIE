@@ -1,0 +1,51 @@
+{
+  "income": [],
+  "expenses": [],
+  "bookings": [],
+  "clients": [
+    {
+      "id": "4",
+      "fullname": "qwe12e21e",
+      "email": "123123123123123123@mail.ru",
+      "phone": "792211112312",
+      "password": "0031f81067aad33ac25f33556bc93cf3:7a883dd922dc07715d9f986fa48a17395fe78ce80ce2510eca79230ad985092d4a1fce625d7a94c6075914a31cd73762afeb2437e8e95c67c0dd41958aa355dd",
+      "registrationDate": "2025-05-18",
+      "notes": "qwe"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "ROOM904132dj8",
+      "type": "superior",
+      "status": "occupied",
+      "capacity": 1,
+      "price": 120000,
+      "description": ""
+    }
+  ],
+  "services": [
+    {
+      "id": "SVC2105365sk",
+      "name": "123",
+      "description": "123",
+      "category": "food",
+      "price": 123,
+      "unit": "за услугу"
+    }
+  ],
+  "staff": [
+    {
+      "id": "EMP001",
+      "fullname": "Администратор",
+      "position": "Главный администратор",
+      "role": "admin",
+      "email": "admin@hotel.com",
+      "phone": "79220058654",
+      "login": "admin",
+      "password": "123456",
+      "salary_rate": "",
+      "schedule_info": "undefined",
+      "notes": "undefined"
+    }
+  ]
+}

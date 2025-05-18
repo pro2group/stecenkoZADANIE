@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добро пожаловать - Система Управления Гостиницей</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .hero {
+            background: #34495e url('https://via.placeholder.com/1200x400?text=Фото+Гостиницы') no-repeat center center/cover;
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            color: white; 
+            border-bottom: none; 
+        }
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+        }
+        .cta-button {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #2980b9;
+        }
+        .features-overview {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .features-overview h2 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .feature {
+            display: inline-block;
+            width: 30%;
+            margin: 0 1.5%;
+            vertical-align: top;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+         @media (max-width: 768px) {
+            .feature {
+                width: 90%;
+                margin: 10px auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html">Система Управления Гостиницей</a>
+            </div>
+            <ul>
+                <li><a href="index.html">Главная</a></li>
+                <li><a href="about.html">О нас</a></li> 
+                <li><a href="rooms_overview.html">Номера</a></li> 
+                <li><a href="contact.html">Контакты</a></li> 
+                <li><a href="login.html">Вход для клиентов</a></li>
+                <li><a href="register.html">Регистрация</a></li>
+                <li><a href="admin.html">Панель администратора</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Управляйте вашей гостиницей легко и эффективно!</h1>
+            <p>Современное решение для автоматизации всех процессов в вашей гостинице.</p>
+            <a href="register.html" class="cta-button">Начать работу</a>
+        </section>
+
+        <section class="features-overview">
+            <h2>Ключевые возможности</h2>
+            <div class="feature">
+                <h3>Бронирование онлайн</h3>
+                <p>Удобная система для ваших клиентов и сотрудников.</p>
+            </div>
+            <div class="feature">
+                <h3>Управление номерами</h3>
+                <p>Всегда актуальная информация о доступности и состоянии номеров.</p>
+            </div>
+            <div class="feature">
+                <h3>Отчетность и аналитика</h3>
+                <p>Принимайте решения на основе точных данных.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Система Управления Гостиницей. Все права защищены.</p>
+    </footer>
+
+    <button id="theme-switcher">Сменить тему</button>
+    <script type="module" src="script.js"></script>
+</body>
+</html> 

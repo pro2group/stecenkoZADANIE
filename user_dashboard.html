@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя Панель - Управление гостиницей</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        //проверка авторизации при загрузке страницы
+        window.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            //заполняем данные профиля
+            document.getElementById('profile-fullname').value = user.fullname || '';
+            document.getElementById('profile-email').value = user.email || '';
+
+            //загружаем бронирования пользователя
+            loadUserBookings(user.id);
+        });
+
+        //функция загрузки бронирований пользователя
+        async function loadUserBookings(userId) {
+            try {
+                const response = await fetch(`http://localhost:3001/api/bookings?userId=${userId}`);
+                const bookings = await response.json();
+                
+                //обновляем виджеты
+                const activeBookings = bookings.filter(b => b.status === 'active').length;
+                const upcomingBookings = bookings.filter(b => b.status === 'upcoming').length;
+                const pastBookings = bookings.filter(b => b.status === 'completed').length;
+
+                document.querySelector('.widget:nth-child(1) p').textContent = activeBookings;
+                document.querySelector('.widget:nth-child(2) p').textContent = upcomingBookings;
+                document.querySelector('.widget:nth-child(3) p').textContent = pastBookings;
+
+                //обновляем таблицу активных бронирований
+                const activeBookingsTable = document.querySelector('#my-bookings table:first-of-type tbody');
+                activeBookingsTable.innerHTML = '';
+                
+                bookings.filter(b => b.status === 'active').forEach(booking => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="ID Брони">${booking.id}</td>
+                        <td data-label="Даты">${booking.checkin_date} - ${booking.checkout_date}</td>
+                        <td data-label="Тип номера">${booking.room_type}</td>
+                        <td data-label="Гостей">${booking.guests}</td>
+                        <td data-label="Статус">${booking.status}</td>
+                        <td data-label="Услуги">${booking.services.join('<br>')}</td>
+                        <td data-label="Действия">
+                            <button class="btn btn-sm btn-info" onclick="showBookingDetails('${booking.id}')">Детали</button>
+                            <button class="btn btn-sm btn-warning" onclick="editBooking('${booking.id}')">Изменить</button>
+                            <button class="btn btn-sm btn-danger" onclick="cancelBooking('${booking.id}')">Отменить</button>
+                        </td>
+                    `;
+                    activeBookingsTable.appendChild(row);
+                });
+
+                //обновляем таблицу истории бронирований
+                const historyTable = document.querySelector('#my-bookings table:last-of-type tbody');
+                historyTable.innerHTML = '';
+                
+                bookings.filter(b => b.status === 'completed').forEach(booking => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="ID Брони">${booking.id}</td>
+                        <td data-label="Даты">${booking.checkin_date} - ${booking.checkout_date}</td>
+                        <td data-label="Тип номера">${booking.room_type}</td>
+                        <td data-label="Стоимость">${booking.total_price} руб.</td>
+                        <td data-label="Статус">Завершено</td>
+                    `;
+                    historyTable.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке бронирований:', error);
+            }
+        }
+
+        //обработчик формы редактирования профиля
+        document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('user'));
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch(`http://localhost:3001/api/clients/${user.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fullname: formData.get('fullname'),
+                        phone: formData.get('phone')
+                    })
+                });
+
+                if (response.ok) {
+                    const updatedUser = await response.json();
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    alert('Профиль успешно обновлен!');
+                } else {
+                    alert('Ошибка при обновлении профиля');
+                }
+            } catch (error) {
+                console.error('Ошибка при обновлении профиля:', error);
+                alert('Ошибка при обновлении профиля');
+            }
+        });
+
+        //обработчик формы смены пароля
+        document.getElementById('change-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('user'));
+            const formData = new FormData(e.target);
+            
+            if (formData.get('new_password') !== formData.get('confirm_new_password')) {
+                alert('Пароли не совпадают');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/clients/${user.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        currentPassword: formData.get('current_password'),
+                        newPassword: formData.get('new_password')
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Пароль успешно изменен!');
+                    e.target.reset();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Ошибка при смене пароля');
+                }
+            } catch (error) {
+                console.error('Ошибка при смене пароля:', error);
+                alert('Ошибка при смене пароля');
+            }
+        });
+
+        //функция выхода из системы
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html">Система Управления Гостиницей</a>
+            </div>
+            <ul>
+                <li><a href="#user-dashboard">Моя панель</a></li>
+                <li><a href="#my-bookings">Мои бронирования</a></li>
+                <li><a href="#my-profile">Мой профиль</a></li>
+                <li><a href="#new-booking">Создать бронь</a></li>
+                <li><a href="#" onclick="logout()">Выход</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="user-dashboard" class="active">
+            <h1>Моя панель управления</h1>
+            <div class="widgets">
+                <div class="widget">
+                    <h2>Активные бронирования</h2>
+                    <p>2</p> 
+                </div>
+                <div class="widget">
+                    <h2>Предстоящие заезды</h2>
+                    <p>1</p> 
+                </div>
+                <div class="widget">
+                    <h2>История пребываний</h2>
+                    <p>5</p>
+                </div>
+            </div>
+            <p>Добро пожаловать в вашу личную панель! Здесь вы можете управлять своими бронированиями и просматривать информацию.</p>
+        </section>
+
+        <section id="my-bookings">
+            <h1>Мои бронирования и история пребываний</h1>
+            <p>Здесь отображаются ваши активные бронирования и история прошлых пребываний.</p>
+            
+            <h2>Активные бронирования</h2>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Брони</th>
+                            <th>Даты заезда/выезда</th>
+                            <th>Тип номера</th>
+                            <th>Кол-во гостей</th>
+                            <th>Статус</th>
+                            <th>Услуги</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="ID Брони">BRN003</td>
+                            <td data-label="Даты">15.12.2024 - 20.12.2024</td>
+                            <td data-label="Тип номера">Полулюкс</td>
+                            <td data-label="Гостей">2</td>
+                            <td data-label="Статус">Подтверждено</td>
+                            <td data-label="Услуги">
+                                Завтрак (2 чел.)<br>
+                                Парковка
+                            </td>
+                            <td data-label="Действия">
+                                <button class="btn btn-sm btn-info">Детали</button>
+                                <button class="btn btn-sm btn-warning">Изменить</button>
+                                <button class="btn btn-sm btn-danger">Отменить</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 style="margin-top: 30px;">История пребываний</h2>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Брони</th>
+                            <th>Даты заезда/выезда</th>
+                            <th>Тип номера</th>
+                            <th>Стоимость</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="ID Брони">BRN001</td>
+                            <td data-label="Даты">01.01.2024 - 05.01.2024</td>
+                            <td data-label="Тип номера">Стандартный</td>
+                            <td data-label="Стоимость">15000 руб.</td>
+                            <td data-label="Статус">Завершено</td>
+                        </tr>
+                        <tr>
+                            <td data-label="ID Брони">BRN002</td>
+                            <td data-label="Даты">10.03.2023 - 12.03.2023</td>
+                            <td data-label="Тип номера">Люкс</td>
+                            <td data-label="Стоимость">25000 руб.</td>
+                            <td data-label="Статус">Завершено</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="my-profile">
+            <h1>Мой профиль</h1>
+            <div class="form-container" style="max-width: 700px;">
+                <h2>Редактировать личные данные</h2>
+                <form id="edit-profile-form">
+                    <div class="form-group">
+                        <label for="profile-fullname">Полное имя:</label>
+                        <input type="text" id="profile-fullname" name="fullname" value="Петрова Мария Сергеевна" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-email">Email (нельзя изменить):</label>
+                        <input type="email" id="profile-email" name="email" value="petrova@example.com" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-phone">Телефон:</label>
+                        <input type="tel" id="profile-phone" name="phone" value="+7 (988) 765-43-21">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    </div>
+                </form>
+
+                <hr style="margin: 30px 0;">
+
+                <h2>Сменить пароль</h2>
+                <form id="change-password-form">
+                    <div class="form-group">
+                        <label for="current-password">Текущий пароль:</label>
+                        <input type="password" id="current-password" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">Новый пароль:</label>
+                        <input type="password" id="new-password" name="new_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-new-password">Подтвердите новый пароль:</label>
+                        <input type="password" id="confirm-new-password" name="confirm_new_password" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">Сменить пароль</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="new-booking">
+            <h1>Создать новое бронирование</h1>
+            <div class="form-container" style="max-width: 800px;">
+                <form id="create-booking-form">
+                    <div style="display: flex; justify-content: space-between; gap: 20px;">
+                        <div class="form-group" style="flex-basis: 48%;">
+                            <label for="checkin-date">Дата заезда:</label>
+                            <input type="date" id="checkin-date" name="checkin_date" required>
+                        </div>
+                        <div class="form-group" style="flex-basis: 48%;">
+                            <label for="checkout-date">Дата выезда:</label>
+                            <input type="date" id="checkout-date" name="checkout_date" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="room-type">Тип номера:</label>
+                        <select id="room-type" name="room_type" required>
+                            <option value="">Выберите тип номера...</option>
+                            <option value="standard">Стандартный</option>
+                            <option value="superior">Улучшенный (Superior)</option>
+                            <option value="deluxe">Делюкс (Deluxe)</option>
+                            <option value="suite">Люкс (Suite)</option>
+                            <option value="family">Семейный</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; gap: 20px;">
+                        <div class="form-group" style="flex-basis: 48%;">
+                            <label for="adults">Количество взрослых:</label>
+                            <input type="number" id="adults" name="adults" min="1" value="1" required>
+                        </div>
+                        <div class="form-group" style="flex-basis: 48%;">
+                            <label for="children">Количество детей (до 12 лет):</label>
+                            <input type="number" id="children" name="children" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="special-requests">Специальные пожелания:</label>
+                        <textarea id="special-requests" name="special_requests" rows="3" placeholder="Например, тихий номер, дополнительная кровать (может взиматься плата)"></textarea>
+                    </div>
+
+                    <fieldset style="margin-top: 20px; margin-bottom: 15px; padding: 10px; border: 1px solid var(--section-border); border-radius: 4px;">
+                        <legend style="font-weight: bold; color: var(--text-color);">Дополнительные услуги (по желанию)</legend>
+                        <div class="form-group-checkbox">
+                            <input type="checkbox" id="service-breakfast" name="optional_services[]" value="SVC001_breakfast">
+                            <label for="service-breakfast">Завтрак "Шведский стол" (800 руб./чел.)</label>
+                        </div>
+                        <div class="form-group-checkbox">
+                            <input type="checkbox" id="service-transfer" name="optional_services[]" value="SVC002_transfer">
+                            <label for="service-transfer">Трансфер из/в аэропорт (2500 руб.)</label>
+                        </div>
+                        <div class="form-group-checkbox">
+                            <input type="checkbox" id="service-parking" name="optional_services[]" value="SVC003_parking">
+                            <label for="service-parking">Парковка (500 руб./сутки)</label>
+                        </div>
+
+                    </fieldset>
+
+                    <fieldset style="margin-top: 20px; margin-bottom: 15px; padding: 10px; border: 1px solid var(--section-border); border-radius: 4px;">
+                        <legend style="font-weight: bold; color: var(--text-color);">Оплата</legend>
+                        <div class="form-group">
+                            <label for="payment-method">Способ оплаты:</label>
+                            <select id="payment-method" name="payment_method">
+                                <option value="card_online">Банковская карта (онлайн)</option>
+                                <option value="upon_arrival">При заселении (наличными/картой)</option>
+                                <option value="bank_transfer">Банковский перевод (по счету)</option>
+                            </select>
+                        </div>
+
+                        <div id="payment-details-placeholder" style="margin-top: 10px;">
+                            <p><em>(Здесь будет форма для ввода данных карты или информация о переходе к платежной системе, если выбран соответствующий способ)</em></p>
+                        </div>
+                    </fieldset>
+
+                    <div id="availability-results" style="margin-top: 20px; padding: 15px; border: 1px dashed var(--section-border); border-radius: 4px; display: none;">
+                        <h4>Результаты проверки:</h4>
+                        <p id="availability-message">Номера выбранного типа доступны!</p>
+                        <p><strong>Ориентировочная стоимость:</strong> <span id="booking-price">12500 руб.</span></p>
+                        <button type="button" class="btn btn-success" id="confirm-booking-btn" style="margin-top:10px;">Забронировать</button>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <button type="button" class="btn btn-primary" id="check-availability-btn">Проверить доступность и цены</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Система Управления Гостиницей</p>
+    </footer>
+
+    <button id="theme-switcher">Сменить тему</button>
+    <script type="module" src="script.js"></script>
+</body>
+</html> 
